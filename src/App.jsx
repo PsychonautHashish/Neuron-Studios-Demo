@@ -111,7 +111,7 @@ function App() {
         onLogout={handleLogout}
         onUploadClick={() => setShowUpload(true)}
         onProfileClick={() => setShowProfile(true)}
-        title="Neuron Studios Demo App"
+        title="Neuron Studios"
       />
       <Upload open={showUpload} onClose={() => setShowUpload(false)} user={user} />
       {showProfile && <Profile user={user} onClose={() => setShowProfile(false)} />}
