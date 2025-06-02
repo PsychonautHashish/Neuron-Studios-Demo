@@ -123,7 +123,7 @@ function App() {
           letterSpacing: 2,
           fontFamily: 'Orbitron, Arial, sans-serif'
         }}>
-          Neuron Studios Demo App
+          Welcome {user}
         </h1>
         <BookingForm
           addBooking={addBooking}
