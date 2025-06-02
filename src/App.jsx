@@ -1,30 +1,29 @@
 import { useState, useEffect } from 'react';
-import Calendar from './components/Calendar';
-import BookingForm from './components/BookingForm';
-import BookingList from './components/BookingList';
-import Login from './components/Login';
 import NavBar from './components/NavBar';
 import Upload from './components/Upload';
+import Profile from './components/Profile';
+import Login from './components/Login';
+import BookingForm from './components/BookingForm';
+import Calendar from './components/Calendar';
+import BookingList from './components/BookingList';
 import './styles/glassmorphism.css';
 
 const API = 'http://localhost:4000/api';
 
 function App() {
-  const [bookings, setBookings] = useState([]);
   const [user, setUser] = useState(null);
-  const [darkMode, setDarkMode] = useState(true);
+  const [bookings, setBookings] = useState([]); // <-- FIX: bookings state was missing
   const [showUpload, setShowUpload] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [notification, setNotification] = useState('');
 
   useEffect(() => {
-    document.body.classList.toggle('light-mode', !darkMode);
-  }, [darkMode]);
-
-  // Fetch bookings from backend
-  useEffect(() => {
-    fetch(`${API}/bookings`)
-      .then(res => res.json())
-      .then(setBookings);
-  }, []);
+    if (user) {
+      fetch(`${API}/bookings`)
+        .then(res => res.json())
+        .then(setBookings);
+    }
+  }, [user]);
 
   const refreshBookings = () => {
     fetch(`${API}/bookings`)
@@ -42,7 +41,15 @@ function App() {
         if (!res.ok) return res.json().then(e => { throw e; });
         return res.json();
       })
-      .then(() => refreshBookings());
+      .then(() => {
+        refreshBookings();
+        setNotification('Booking added successfully!');
+        setTimeout(() => setNotification(''), 3000);
+      })
+      .catch(() => {
+        setNotification('Failed to add booking.');
+        setTimeout(() => setNotification(''), 3000);
+      });
   };
 
   const updateBooking = (id, details) => {
@@ -52,7 +59,15 @@ function App() {
       body: JSON.stringify({ details, user }),
     })
       .then(res => res.json())
-      .then(() => refreshBookings());
+      .then(() => {
+        refreshBookings();
+        setNotification('Booking updated successfully!');
+        setTimeout(() => setNotification(''), 3000);
+      })
+      .catch(() => {
+        setNotification('Failed to update booking.');
+        setTimeout(() => setNotification(''), 3000);
+      });
   };
 
   const deleteBooking = (id) => {
@@ -62,7 +77,15 @@ function App() {
       body: JSON.stringify({ user }),
     })
       .then(res => res.json())
-      .then(() => refreshBookings());
+      .then(() => {
+        refreshBookings();
+        setNotification('Booking deleted successfully!');
+        setTimeout(() => setNotification(''), 3000);
+      })
+      .catch(() => {
+        setNotification('Failed to delete booking.');
+        setTimeout(() => setNotification(''), 3000);
+      });
   };
 
   // Check for overlap
@@ -87,14 +110,39 @@ function App() {
         user={user}
         onLogout={handleLogout}
         onUploadClick={() => setShowUpload(true)}
-        darkMode={darkMode}
-        setDarkMode={setDarkMode}
+        onProfileClick={() => setShowProfile(true)}
+        title="Neuron Studios Demo App"
       />
       <Upload open={showUpload} onClose={() => setShowUpload(false)} user={user} />
+      {showProfile && <Profile user={user} onClose={() => setShowProfile(false)} />}
       <div className="app-container">
-        <BookingForm addBooking={addBooking} isDateBooked={isDateBooked} bookedDates={bookings} />
-        <Calendar bookedDates={bookings} isDateBooked={isDateBooked} />
-        <BookingList bookings={bookings} user={user} onUpdate={updateBooking} onDelete={deleteBooking} />
+        <h1 style={{
+          textAlign: 'center',
+          color: '#00ffe7',
+          marginBottom: 24,
+          letterSpacing: 2,
+          fontFamily: 'Orbitron, Arial, sans-serif'
+        }}>
+          Neuron Studios Demo App
+        </h1>
+        <BookingForm
+          addBooking={addBooking}
+          isDateBooked={isDateBooked}
+          bookedDates={bookings}
+          setNotification={setNotification}
+        />
+        <Calendar
+          bookedDates={bookings}
+          isDateBooked={isDateBooked}
+        />
+        <BookingList
+          bookings={bookings}
+          user={user}
+          onUpdate={updateBooking}
+          onDelete={deleteBooking}
+          setNotification={setNotification}
+        />
+        {notification && <div className="notification">{notification}</div>}
       </div>
     </>
   );

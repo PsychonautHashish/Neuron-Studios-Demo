@@ -15,6 +15,15 @@ const GOOGLE_FORM_FIELDS = {
   audioFile: 'entry.1040188244',  // This will be the audio file name
 };
 
+const GENRES = [
+  "Afrobeats", "Hip Hop", "Trap", "R&B", "Pop", "Dancehall", "Reggae", "Amapiano", "House", "EDM", "Rock", "Jazz", "Soul", "Gospel", "Other"
+];
+
+const KEYS = [
+  "C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B",
+  "Cm", "C#m", "Dbm", "Dm", "D#m", "Ebm", "Em", "Fm", "F#m", "Gbm", "Gm", "G#m", "Abm", "Am", "A#m", "Bbm", "Bm"
+];
+
 function Upload({ open, onClose, user }) {
   const audioInput = useRef();
   const lyricInput = useRef();
@@ -208,13 +217,17 @@ function Upload({ open, onClose, user }) {
               onChange={e => setMeta(m => ({ ...m, trackName: e.target.value }))}
               required
             />
-            <input
+            <select
               className="input-field"
-              placeholder="Genre"
               value={meta.genre}
               onChange={e => setMeta(m => ({ ...m, genre: e.target.value }))}
               required
-            />
+            >
+              <option value="">Select Genre</option>
+              {GENRES.map(g => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
             <select
               className="input-field"
               value={meta.type}
@@ -233,13 +246,17 @@ function Upload({ open, onClose, user }) {
               onChange={e => setMeta(m => ({ ...m, bpm: e.target.value }))}
               required
             />
-            <input
+            <select
               className="input-field"
-              placeholder="Key (e.g. C#m, F, Bb)"
               value={meta.key}
               onChange={e => setMeta(m => ({ ...m, key: e.target.value }))}
               required
-            />
+            >
+              <option value="">Select Key</option>
+              {KEYS.map(k => (
+                <option key={k} value={k}>{k}</option>
+              ))}
+            </select>
             <button className="submit-button" type="submit">
               Submit Metadata
             </button>

@@ -7,6 +7,7 @@ const multer = require('multer');
 
 const BOOKINGS_PATH = path.join(__dirname, '../src/data/bookings.json');
 const USERS_PATH = path.join(__dirname, '../src/data/users.json');
+const uploadHistoryPath = path.join(__dirname, '../src/data/uploadHistory.json');
 
 const app = express();
 app.use(cors());
@@ -48,6 +49,18 @@ function readUsers() {
   } catch {
     return [];
   }
+}
+
+// Helper to read/write upload history
+function readUploadHistory() {
+  try {
+    return JSON.parse(fs.readFileSync(uploadHistoryPath, 'utf8'));
+  } catch {
+    return [];
+  }
+}
+function writeUploadHistory(history) {
+  fs.writeFileSync(uploadHistoryPath, JSON.stringify(history, null, 2));
 }
 
 // --- API ROUTES ---
@@ -120,8 +133,24 @@ app.post('/api/login', (req, res) => {
 // Upload endpoint
 app.post('/api/upload', upload.single('audio'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  // Optionally, save info about the upload (user, filename, etc.)
+  const { user } = req.body;
+  const history = readUploadHistory();
+  history.push({
+    user,
+    filename: req.file.filename,
+    original: req.file.originalname,
+    uploadDate: new Date().toISOString()
+  });
+  writeUploadHistory(history);
   res.json({ filename: req.file.filename, original: req.file.originalname });
+});
+
+// Serve upload history (demo: scan uploads folder for files uploaded by user)
+app.get('/api/uploads', (req, res) => {
+  const user = req.query.user;
+  const history = readUploadHistory();
+  const userUploads = history.filter(u => u.user === user);
+  res.json(userUploads);
 });
 
 const PORT = 4000;
