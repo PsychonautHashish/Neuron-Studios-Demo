@@ -4,6 +4,7 @@ const path = require('path');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const multer = require('multer');
+const { uploadTrackToDrive } = require('./googleDrive');
 
 const BOOKINGS_PATH = path.join(__dirname, '../src/data/bookings.json');
 const USERS_PATH = path.join(__dirname, '../src/data/users.json');
@@ -133,16 +134,25 @@ app.post('/api/login', (req, res) => {
 // Upload endpoint
 app.post('/api/upload', upload.single('audio'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const { user } = req.body;
-  const history = readUploadHistory();
-  history.push({
-    user,
-    filename: req.file.filename,
-    original: req.file.originalname,
-    uploadDate: new Date().toISOString()
-  });
-  writeUploadHistory(history);
-  res.json({ filename: req.file.filename, original: req.file.originalname });
+  const { user, type, genre } = req.body;
+  const mainFolderId = 'YOUR_MAIN_DRIVE_FOLDER_ID'; // Set this to your Drive folder ID
+
+  uploadTrackToDrive(req.file.path, user, type, genre, mainFolderId)
+    .then(fileInfo => {
+      const history = readUploadHistory();
+      history.push({
+        user,
+        filename: req.file.filename,
+        original: req.file.originalname,
+        uploadDate: new Date().toISOString()
+      });
+      writeUploadHistory(history);
+      res.json({ filename: req.file.filename, original: req.file.originalname, driveLink: fileInfo.webViewLink });
+    })
+    .catch(err => {
+      console.error('Drive upload error:', err);
+      res.status(500).json({ error: 'Failed to upload to Google Drive' });
+    });
 });
 
 // Serve upload history (demo: scan uploads folder for files uploaded by user)
