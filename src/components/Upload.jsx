@@ -59,15 +59,15 @@ function Upload({ open, onClose, user }) {
     setUploading(true);
 
     // Upload audio file
-    const audioFormData = new FormData();
-    audioFormData.append('audio', audioFile);
-    audioFormData.append('user', user);
+    const formData = new FormData();
+    formData.append('audio', audioFile);
+    formData.append('user', user); // or 'producer', but must match backend
 
     let audioUploadRes, lyricUploadRes;
     try {
-      audioUploadRes = await fetch(`${API}/upload`, {
+      audioUploadRes = await fetch(`${API}/upload-local`, {
         method: 'POST',
-        body: audioFormData,
+        body: formData,
       });
       if (!audioUploadRes.ok) throw new Error('Audio upload failed');
       const audioData = await audioUploadRes.json();
@@ -104,46 +104,28 @@ function Upload({ open, onClose, user }) {
     setUploading(false);
   };
 
-  // Step 2: Submit metadata to Google Form
+  // Step 2: Submit metadata to backend
   const handleMetaSubmit = async (e) => {
     e.preventDefault();
     setMessage('Submitting metadata...');
-
-    // Prepare form data for Google Form
-    const form = document.createElement('form');
-    form.action = GOOGLE_FORM_ACTION_URL;
-    form.method = 'POST';
-    form.target = '_blank'; // Open in new tab so user can see confirmation
-
-    // Add fields
-    const addField = (name, value) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
-    };
-
-    addField(GOOGLE_FORM_FIELDS.genre, meta.genre);
-    addField(GOOGLE_FORM_FIELDS.type, meta.type);
-    addField(GOOGLE_FORM_FIELDS.trackName, meta.trackName);
-    addField(GOOGLE_FORM_FIELDS.producer, user);
-    addField(GOOGLE_FORM_FIELDS.bpm, meta.bpm);
-    addField(GOOGLE_FORM_FIELDS.key, meta.key);
-    addField(
-      GOOGLE_FORM_FIELDS.lyric,
-      lyricFileInfo ? lyricFileInfo.original : 'none'
-    );
-    addField(
-      GOOGLE_FORM_FIELDS.audioFile,
-      audioFileInfo ? audioFileInfo.original : ''
-    );
-
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-
-    setMessage('Metadata submitted! You may close this window.');
+    try {
+      const res = await fetch(`${API}/upload-to-drive`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user,
+          type: meta.type,
+          genre: meta.genre,
+          filename: audioFileInfo.filename,
+          lyricFile: lyricFileInfo ? lyricFileInfo.filename : '',
+          uploadDate: new Date().toISOString()
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to save metadata');
+      setMessage('Track uploaded and metadata saved!');
+    } catch {
+      setMessage('Failed to save metadata.');
+    }
   };
 
   // Reset state when closed

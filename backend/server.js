@@ -134,10 +134,12 @@ app.post('/api/login', (req, res) => {
 // Upload endpoint
 app.post('/api/upload', upload.single('audio'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  // Make sure to use the correct field names from your frontend!
   const { user, type, genre } = req.body;
-  const mainFolderId = 'YOUR_MAIN_DRIVE_FOLDER_ID'; // Set this to your Drive folder ID
+  const producer = user;
+  const mainFolderId = '1TOOgAPZfxgA3TNNLAPJAgogZq50wQXUq'; // Set this to your Drive folder ID
 
-  uploadTrackToDrive(req.file.path, user, type, genre, mainFolderId)
+  uploadTrackToDrive(req.file.path, producer, type, genre, mainFolderId)
     .then(fileInfo => {
       const history = readUploadHistory();
       history.push({
@@ -161,6 +163,50 @@ app.get('/api/uploads', (req, res) => {
   const history = readUploadHistory();
   const userUploads = history.filter(u => u.user === user);
   res.json(userUploads);
+});
+
+// Add this endpoint
+app.post('/api/track-metadata', (req, res) => {
+  const history = readUploadHistory();
+  history.push(req.body);
+  writeUploadHistory(history);
+  res.json({ success: true });
+});
+
+// New local upload endpoint
+app.post('/api/upload-local', upload.single('audio'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  // Save info for later
+  res.json({ filename: req.file.filename, original: req.file.originalname });
+});
+
+app.post('/api/upload-to-drive', async (req, res) => {
+  const { user, type, genre, filename } = req.body;
+  const mainFolderId = '1TOOgAPZfxgA3TNNLAPJAgogZq50wQXUq';
+  if (!user || !type || !genre || !filename) {
+    return res.status(400).json({ error: 'Missing fields' });
+  }
+  const localFilePath = path.join(__dirname, '../src/data/uploads', filename);
+  try {
+    const fileInfo = await uploadTrackToDrive(localFilePath, user, type, genre, mainFolderId);
+    // Save metadata
+    const history = readUploadHistory();
+    history.push({
+      user,
+      type,
+      genre,
+      filename,
+      original: req.body.original || filename,
+      uploadDate: new Date().toISOString(),
+      driveLink: fileInfo.webViewLink,
+      // ...other metadata...
+    });
+    writeUploadHistory(history);
+    res.json({ success: true, driveLink: fileInfo.webViewLink });
+  } catch (err) {
+    console.error('Drive upload error:', err);
+    res.status(500).json({ error: 'Failed to upload to Google Drive' });
+  }
 });
 
 const PORT = 4000;

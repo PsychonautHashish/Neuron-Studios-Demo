@@ -32,6 +32,7 @@ async function getOrCreateFolder(name, parentId) {
 
 // Main upload function
 async function uploadTrackToDrive(localFilePath, producer, type, genre, mainFolderId) {
+  if (!producer || !type || !genre) throw new Error('Producer, type, and genre are required');
   // 1. Producer folder
   const producerFolderId = await getOrCreateFolder(producer, mainFolderId);
   // 2. Type folder
