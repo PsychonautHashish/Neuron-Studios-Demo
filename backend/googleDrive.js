@@ -31,18 +31,16 @@ async function getOrCreateFolder(name, parentId) {
 }
 
 // Main upload function
-async function uploadTrackToDrive(localFilePath, producer, type, genre, mainFolderId) {
+async function uploadTrackToDrive(localFilePath, producer, type, genre, mainFolderId, originalName, trackName) {
   if (!producer || !type || !genre) throw new Error('Producer, type, and genre are required');
-  // 1. Producer folder
   const producerFolderId = await getOrCreateFolder(producer, mainFolderId);
-  // 2. Type folder
   const typeFolderId = await getOrCreateFolder(type, producerFolderId);
-  // 3. Genre folder
   const genreFolderId = await getOrCreateFolder(genre, typeFolderId);
 
-  // 4. Upload file
+  const ext = path.extname(originalName || localFilePath);
+  console.log('Uploading to Drive:', { trackName, ext, finalName: trackName + ext });
   const fileMetadata = {
-    name: path.basename(localFilePath),
+    name: trackName + ext,
     parents: [genreFolderId],
   };
   const media = {

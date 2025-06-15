@@ -117,6 +117,10 @@ function Upload({ open, onClose, user }) {
           type: meta.type,
           genre: meta.genre,
           filename: audioFileInfo.filename,
+          original: audioFileInfo.original,
+          trackName: meta.trackName, // <-- this must be the user's input!
+          bpm: meta.bpm,
+          key: meta.key,
           lyricFile: lyricFileInfo ? lyricFileInfo.filename : '',
           uploadDate: new Date().toISOString()
         }),

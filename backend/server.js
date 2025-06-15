@@ -181,14 +181,14 @@ app.post('/api/upload-local', upload.single('audio'), (req, res) => {
 });
 
 app.post('/api/upload-to-drive', async (req, res) => {
-  const { user, type, genre, filename } = req.body;
+  const { user, type, genre, filename, original, trackName } = req.body;
   const mainFolderId = '1TOOgAPZfxgA3TNNLAPJAgogZq50wQXUq';
-  if (!user || !type || !genre || !filename) {
+  if (!user || !type || !genre || !filename || !trackName) {
     return res.status(400).json({ error: 'Missing fields' });
   }
   const localFilePath = path.join(__dirname, '../src/data/uploads', filename);
   try {
-    const fileInfo = await uploadTrackToDrive(localFilePath, user, type, genre, mainFolderId);
+    const fileInfo = await uploadTrackToDrive(localFilePath, user, type, genre, mainFolderId, original, trackName);
     // Save metadata
     const history = readUploadHistory();
     history.push({
@@ -197,9 +197,12 @@ app.post('/api/upload-to-drive', async (req, res) => {
       genre,
       filename,
       original: req.body.original || filename,
-      uploadDate: new Date().toISOString(),
+      trackName: req.body.trackName,
+      bpm: req.body.bpm,
+      key: req.body.key,
+      lyricFile: req.body.lyricFile,
+      uploadDate: req.body.uploadDate,
       driveLink: fileInfo.webViewLink,
-      // ...other metadata...
     });
     writeUploadHistory(history);
     res.json({ success: true, driveLink: fileInfo.webViewLink });
