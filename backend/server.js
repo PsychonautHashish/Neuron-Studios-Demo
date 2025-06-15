@@ -5,9 +5,10 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const { uploadTrackToDrive } = require('./googleDrive');
+const { OAuth2Client } = require('google-auth-library');
 
 const BOOKINGS_PATH = path.join(__dirname, '../src/data/bookings.json');
-const USERS_PATH = path.join(__dirname, '../src/data/users.json');
+const USERS_PATH = path.join(__dirname, '../src/utils/users.json');
 const uploadHistoryPath = path.join(__dirname, '../src/data/uploadHistory.json');
 
 const app = express();
@@ -181,14 +182,25 @@ app.post('/api/upload-local', upload.single('audio'), (req, res) => {
 });
 
 app.post('/api/upload-to-drive', async (req, res) => {
-  const { user, type, genre, filename, original, trackName } = req.body;
+  let { displayName, user, type, genre, filename, original, trackName } = req.body;
   const mainFolderId = '1TOOgAPZfxgA3TNNLAPJAgogZq50wQXUq';
-  if (!user || !type || !genre || !filename || !trackName) {
+
+  // Use displayName if present, otherwise fallback to user
+  let folderName = displayName || user;
+
+  // Remove only forbidden characters for Google Drive folders
+  // Forbidden: / \ ? * : < > " |
+  if (folderName) {
+    folderName = folderName.replace(/[\/\\\?\*\:\<\>\"\|]/g, '');
+    folderName = folderName.trim(); // Remove leading/trailing spaces
+  }
+
+  if (!folderName || !type || !genre || !filename || !trackName) {
     return res.status(400).json({ error: 'Missing fields' });
   }
   const localFilePath = path.join(__dirname, '../src/data/uploads', filename);
   try {
-    const fileInfo = await uploadTrackToDrive(localFilePath, user, type, genre, mainFolderId, original, trackName);
+    const fileInfo = await uploadTrackToDrive(localFilePath, folderName, type, genre, mainFolderId, original, trackName);
     // Save metadata
     const history = readUploadHistory();
     history.push({
@@ -216,3 +228,22 @@ const PORT = 4000;
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
 });
+
+const googleClient = new OAuth2Client('405192266130-larvevbnuoa8leuctu853l39j0np1o6v.apps.googleusercontent.com');
+
+app.post('/api/google-login', async (req, res) => {
+  const { token } = req.body;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: '405192266130-larvevbnuoa8leuctu853l39j0np1o6v.apps.googleusercontent.com',
+    });
+    const payload = ticket.getPayload();
+    // payload.email, payload.name, payload.picture, etc.
+    // You can create or update the user in your DB here
+    res.json({ username: payload.email, name: payload.name });
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid Google token' });
+  }
+});
+

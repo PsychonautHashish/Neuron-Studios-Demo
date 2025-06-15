@@ -24,7 +24,7 @@ const KEYS = [
   "Cm", "C#m", "Dbm", "Dm", "D#m", "Ebm", "Em", "Fm", "F#m", "Gbm", "Gm", "G#m", "Abm", "Am", "A#m", "Bbm", "Bm"
 ];
 
-function Upload({ open, onClose, user }) {
+function Upload({ open, onClose, user, displayName }) {
   const audioInput = useRef();
   const lyricInput = useRef();
   const [message, setMessage] = useState('');
@@ -114,11 +114,12 @@ function Upload({ open, onClose, user }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user,
+          displayName, // <-- make sure this is included!
           type: meta.type,
           genre: meta.genre,
           filename: audioFileInfo.filename,
           original: audioFileInfo.original,
-          trackName: meta.trackName, // <-- this must be the user's input!
+          trackName: meta.trackName,
           bpm: meta.bpm,
           key: meta.key,
           lyricFile: lyricFileInfo ? lyricFileInfo.filename : '',

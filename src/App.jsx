@@ -12,6 +12,7 @@ const API = 'http://localhost:4000/api';
 
 function App() {
   const [user, setUser] = useState(null);
+  const [displayName, setDisplayName] = useState(null);
   const [bookings, setBookings] = useState([]); // <-- FIX: bookings state was missing
   const [showUpload, setShowUpload] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -101,19 +102,22 @@ function App() {
   const handleLogout = () => setUser(null);
 
   if (!user) {
-    return <Login onLogin={setUser} />;
+    return <Login onLogin={(username, name) => {
+      setUser(username);
+      setDisplayName(name ? name.split(' ')[0] : username.split('@')[0]);
+    }} />;
   }
 
   return (
     <>
       <NavBar
-        user={user}
+        user={displayName || user}
         onLogout={handleLogout}
         onUploadClick={() => setShowUpload(true)}
         onProfileClick={() => setShowProfile(true)}
         title="Neuron Studios"
       />
-      <Upload open={showUpload} onClose={() => setShowUpload(false)} user={user} />
+      <Upload open={showUpload} onClose={() => setShowUpload(false)} user={user} displayName={displayName} />
       {showProfile && <Profile user={user} onClose={() => setShowProfile(false)} />}
       <div className="app-container">
         <h1 style={{
@@ -123,7 +127,7 @@ function App() {
           letterSpacing: 2,
           fontFamily: 'Orbitron, Arial, sans-serif'
         }}>
-          Welcome {user}
+          Welcome {displayName || user}
         </h1>
         <BookingForm
           addBooking={addBooking}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { GoogleLogin, googleLogout } from '@react-oauth/google';
 
 const API = 'http://localhost:4000/api';
 
@@ -28,6 +29,20 @@ function Login({ onLogin }) {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const res = await fetch('http://localhost:4000/api/google-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: credentialResponse.credential }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      onLogin(data.username, data.name); // Pass both username and name
+    } else {
+      // handle error
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="booking-form" style={{ maxWidth: 350, margin: '40px auto' }}>
       <h2>Producer Login</h2>
@@ -53,6 +68,12 @@ function Login({ onLogin }) {
         Zenny / zenny456<br />
         Dawnmane / dawn789<br />
         Medz / medz321
+      </div>
+      <div style={{ margin: '16px 0' }}>
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={() => { /* handle error */ }}
+        />
       </div>
     </form>
   );

@@ -1,6 +1,22 @@
 [
-  { "username": "Frosty", "password": "frosty123" },
-  { "username": "Zenny", "password": "zenny456" },
-  { "username": "Dawnmane", "password": "dawn789" },
-  { "username": "Medz", "password": "medz321" }
+  {
+    "username": "Frosty",
+    "password": "frosty123"
+  },
+  {
+    "username": "Zenny",
+    "password": "zenny456"
+  },
+  {
+    "username": "Dawnmane",
+    "password": "dawn789"
+  },
+  {
+    "username": "Medz",
+    "password": "medz321"
+  },
+  {
+    "username": "Mantra",
+    "password": "Mantra1"
+  }
 ]
