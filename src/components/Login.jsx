@@ -62,13 +62,7 @@ function Login({ onLogin }) {
       />
       <button className="submit-button" type="submit">Login</button>
       {error && <div style={{ color: '#ff00cc', marginTop: 10 }}>{error}</div>}
-      <div style={{ marginTop: 16, color: '#00ffe7', fontSize: 13 }}>
-        <b>Demo Users:</b><br />
-        Frosty / frosty123<br />
-        Zenny / zenny456<br />
-        Dawnmane / dawn789<br />
-        Medz / medz321
-      </div>
+      
       <div style={{ margin: '16px 0' }}>
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
