@@ -239,8 +239,22 @@ app.post('/api/google-login', async (req, res) => {
       audience: '405192266130-larvevbnuoa8leuctu853l39j0np1o6v.apps.googleusercontent.com',
     });
     const payload = ticket.getPayload();
-    // payload.email, payload.name, payload.picture, etc.
-    // You can create or update the user in your DB here
+
+    // List of allowed emails
+    const allowedEmails = [
+      'mbuthiaeddy@gmail.com',
+      'yeddxgetthemoney@gmail.com',
+      'zennybeatsstore@gmail.com',
+      'frostyqbeats@gmail.com',
+      'philzonmedz@gmail.com',
+      'studiosneuron@gmail.com'
+      // Add more allowed emails here
+    ];
+
+    if (!allowedEmails.includes(payload.email)) {
+      return res.status(403).json({ error: 'Email not authorized' });
+    }
+
     res.json({ username: payload.email, name: payload.name });
   } catch (err) {
     res.status(401).json({ error: 'Invalid Google token' });
